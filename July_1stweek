@@ -1,0 +1,162 @@
+import tensorflow as tf 
+import nltk
+import re
+
+from nltk.tokenize import word_tokenize
+from nltk.tokenize import WordPunctTokenizer
+from tensorflow.keras.preprocessing.text import text_to_word_sequence
+
+#필요한 파일 다운로드 
+nltk.download('punkt')
+nltk.download('averaged_perceptron_tagger')
+nltk.download('wordnet')
+nltk.download('stopwords')
+
+#단어를 기준으로 토큰화 
+#각 토크나이저의 결과가 다름
+print(' 단 어 토 큰 화 1 :',word_tokenize("Don't be fooled by the dark sounding name, Mr. Jone's Orphanage is as cheery as cheery goes for a pastry shop."))
+print(' 단 어 토 큰 화 2 :',WordPunctTokenizer().tokenize("Don't be fooled by the dark sounding name, Mr. Jone's Orphanage is as cheery as cheery goes for a pastry shop."))
+print(' 단 어 토 큰 화 3 :',text_to_word_sequence("Don't be fooled by the dark sounding name, Mr. Jone's Orphanage is as cheery as cheery goes for a pastry shop."))
+
+from nltk.tokenize import TreebankWordTokenizer
+tokenizer = TreebankWordTokenizer()
+text = "Starting a home-based restaurant may be an ideal. it doesn't have a food chain or restaurant of their own."
+print(' 트 리 뱅 크 워 드 토 크 나 이 저 :',tokenizer.tokenize(text))
+
+#문장을 기준으로 토큰화 
+from nltk.tokenize import sent_tokenize
+text = "His barber kept his word. But keeping such a huge secret to himself was driving him crazy. Finally, the barber went up a mountain and almost to the edge of a cliff. He dug a hole in the midst of some reeds. He looked about, to make sure no one was near."
+print(' 문 장 토 큰 화 1 :',sent_tokenize(text))
+
+text = "I am actively looking for Ph.D. students. and you are a Ph.D student." 
+print(' 문 장 토 큰 화 2 :',sent_tokenize(text))
+
+#단어 토큰화 후 단어에 품사 태깅 
+from nltk.tag import pos_tag
+text = "I am actively looking for Ph.D. students. and you are a Ph.D. student."
+tokenized_sentence = word_tokenize(text)
+print(' 단 어 토 큰 화 :',tokenized_sentence) 
+print(' 품 사 태 깅 :',pos_tag(tokenized_sentence))
+
+#한국어 토크나이저 
+from konlpy.tag import Okt
+from konlpy.tag import Kkma
+
+okt = Okt()
+kkma = Kkma()
+
+print('OKT 형태소 분석 :',okt.morphs("열심히 코딩한 당신, 연휴에는 여행을 가봐요"))
+print('OKT 품사 태깅 :',okt.pos("열심히 코딩한 당신, 연휴에는 여행을 가봐요"))
+print('OKT 명사 추출 :',okt.nouns("열심히 코딩한 당신, 연휴에는 여행을 가봐요"))
+
+print('꼬꼬마 형태소 분석 :',kkma.morphs("열심히 코딩한 당신, 연휴에는 여행을 가봐요"))
+print('꼬꼬마 품사 태깅 :',kkma.pos("열심히 코딩한 당신, 연휴에는 여행을 가봐요"))
+print('꼬꼬마 명사 추출 :',kkma.nouns("열심히 코딩한 당신, 연휴에는 여행을 가봐요"))
+
+'''
+otk보다 kkm가 더 정밀한 형태소 분석을 할  수 있다. 
+otk는 kkm에 비해 조사 형태소 분석이 더 잘 되는 느낌
+명사추출 품사태깅 능력은 비슷한듯
+애초에 조사를 세밀하게 형태소 분석하는게 의미가 있나.. 싶긴 함
+'''
+
+#영어에서의 불용어 필터링 
+#영어의 불용어는 길이가 짧은 단어라고 생각해도 문제가 없는 경우가 많음
+text = "I was wondering if anyone out there could enlighten me on this car."
+shortword = re.compile(r'\W*\b\w{1,2}\b') #re모듈을 이용한 길이가 1,2인 단어 패턴 컴파일
+print(shortword.sub('', text)) #sub method는 컴파일된 패턴을 만족하는 경우 원하는 문자열로 바꿈. 여기서는 공백으로
+
+from nltk.stem import WordNetLemmatizer
+
+#lemmatization 실습 
+lemmatizer = WordNetLemmatizer()
+words = ['policy', 'doing', 'organization', 'have', 'going', 'love', 'lives', 'fly', 'dies', 'watched', 'has', 'starting']
+print(' 표 제 어 추 출 전 :',words)
+print(' 표 제 어 추 출 후 :',[lemmatizer.lemmatize(word) for word in words])
+#표 제 어 추 출 후 : ['policy', 'doing', 'organization', 'have', 'going', 'love', 'life', 'fly', 'dy', 'watched', 'ha', 'starting']
+#dy같은 말이 안되는 단어가 포함됨. 
+
+#구체적 품사를 알려준다면 더 정확한 lemmatization을 할 수 있음
+#lemmatization : 표제어 추출
+print("lemmatization of 'dies': ",lemmatizer.lemmatize('dies', 'v'))
+
+#stemming(: 어간 추출) 실습
+from nltk.stem import PorterStemmer
+from nltk.tokenize import word_tokenize
+
+stemmer = PorterStemmer()
+sentence = "This was not the map we found in Billy Bones's chest, but an accurate copy, complete in all things--names and heights and soundings--with the single exception of the red crosses and the written notes."
+
+tokenized_sentence = word_tokenize(sentence)
+print(' 어 간 추 출 전 :', tokenized_sentence)
+print(' 어 간 추 출 후 :',[stemmer.stem(word) for word in tokenized_sentence])
+
+#poter stemmer의 한계
+#정해진 규칙을 통해 stemming하기 때문에 단어의 의미가 달라질 수 있다. 
+words = ['formalize', 'allowance', 'electricical']
+print(' 어 간 추 출 전 :',words)
+print(' 어 간 추 출 후 :',[stemmer.stem(word) for word in words])
+
+#lancaster stemmer vs poter stemmer 
+#둘중 어떤 스테마이져를 사용할지 결과 확인 후 결정
+from nltk.stem import LancasterStemmer
+porter_stemmer = PorterStemmer()
+lancaster_stemmer = LancasterStemmer()
+
+words = ['policy', 'doing', 'organization', 'have', 'going', 'love', 'lives', 'fly', 'dies', 'watched', 'has', 'starting']
+print(' 어 간 추 출 전 :', words)
+print(' 포 터 스 테 머 의 어 간 추 출 후 :',[porter_stemmer.stem(w) for w in words]) 
+print(' 랭 커 스 터 스 테 머 의 어 간 추 출 후 :',[lancaster_stemmer.stem(w) for w in words])
+
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize 
+from konlpy.tag import Okt
+
+#불용어 : 의미파악에 필요 없는 부분
+stop_words_list = stopwords.words('english') 
+print(' 불 용 어 개 수 :', len(stop_words_list)) 
+print(' 불 용 어 10 개 출 력 :',stop_words_list[:10])
+print(type(stop_words_list))
+
+#한국어 불용어 제거 
+#보편적으로 이용되는 불용어와 사용자가 지정한 불용어를 이용해 불용어를 제거할 수 있음
+example = "고기를 아무렇게나 구우려고 하면 안 돼. 고기라고 다 같은 게 아니거든. 예 컨대 삼겹살을 구울 때는 중요한 게 있지."
+stop_words = "를 아무렇게나 구 우려 고 안 돼 같은 게 구울 때 는"
+
+stop_words = stop_words.split(' ')
+word_tokens = okt.morphs(example) 
+
+result = [word for word in word_tokens if word not in stop_words]
+
+print(result)
+
+#정규표현식 실습 
+
+r = re.compile("a.c") #.은 임의의 하나의 문자를 의미함 ex) abc, acc,akc
+print(r.search('kkk')) #아무것도 매치되지 않음
+print(r.search('adc')) #<re.Match object; span=(0, 3), match='adc'> 
+
+r = re.compile('ab?c') #?는 앞 문자가 있어도 되고 없어도 된다는 의미. b는 있어도 되고 없어도 됨 -> 즉, ac와 abc매치함. 
+print(r.search('abc')) #abc매치
+print(r.search('ac')) #ac매치 
+print(r.search('abbcc')) #None 
+
+r = re.compile('ab*c') #b가 0개 이상 존재하는 경우 ex) ac, abc,abbbbb...c
+print(r.search('a')) #none
+print(r.search('ac')) #ac매치
+print(r.search('abbbbbbbc')) #abbbbbbbc매치
+
+r=re.compile('ab+c') #b가 한개 이상 존재하는 경우. ac는 매치되지 않음
+print(r.search('ac')) #none
+print(r.search('abc')) #abc 매치
+print(r.search('abbbbbc')) #abbbbbc 매치
+
+r = re.compile('^ab') #ab로 시작하는 문자열 
+print(r.match('abaaaa')) #ab매치
+print(r.match('acbbab')) #none
+
+r = re.compile('ab{2}c') #abbc로 시작하는 문자열
+print(r.match('abbc')) #abbc매치
+print(r.match('abbcc'))#abbc매치
+print(r.match('abkc')) #none
+print(r.match('zabbc')) #none
