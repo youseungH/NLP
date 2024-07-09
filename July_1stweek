@@ -160,3 +160,118 @@ print(r.match('abbc')) #abbc매치
 print(r.match('abbcc'))#abbc매치
 print(r.match('abkc')) #none
 print(r.match('zabbc')) #none
+
+r = re.compile('[a-d]') #a와 d사이의 알파벳중 하나와 매치함 []는 숫자, 대문자로도 적용이 가능함 
+print(r.search('a')) #a match
+print(r.search('eeee')) #none
+print(r.search('abee')) #match a 
+print(r.search('bcad')) #match b 
+
+r = re.compile('[^a-d]') #a-d가 없는 문자열 매치
+print(r.search('abc')) #none
+print(r.search('eee')) #match e 
+print(r.search('fge')) #match f
+
+'''
+search vs match 
+search -> 문자열 전체에 대해 체크 
+match -> 앞부분부터 체크 
+search는 문자열 중간에 패턴이 확인되면 찾아짐
+match는 문자열 앞에서 패턴과 불일치한다면 끝
+'''
+#search와 match의 비교 
+r = re.compile('ab.') #ab뒤에 임의의 문자를 포함하는 경우
+#문자열의 앞에 패턴이 포함된 경우 match와 search는 동등함
+print(r.match('abzzzz')) #match abz 
+print(r.search('abzzzz')) #match abz 
+#문자열 처음부터 패턴이 포함되는 경우가 아니라면 match는 none 출력
+print(r.match('zzzabc')) #none
+print(r.search('zzzabc')) #match abc
+
+#re.split vs str.split
+#re.split이 더 복잡한 패턴에 대해, 더 다양한 기준으로 split 할 수 있음
+#토큰화에 유용하게 이용할 수 있음.
+'''
+text = '사과 고양이 고기 으으으 졸리다'
+re.split(' ', text)
+'''
+
+#re.findall 
+#정규표현식과 매치되는 모든 문자열을 리스트 객체로 반환 
+'''
+text = '아 123 와 456 하 789'
+print(re.findall("\d+",text)) 
+print(re.findall("\d+",'text'))
+'''
+#re.sub() 
+#문자열이 아닌 부분을 대체하는 예제 
+'''
+text = "Regular expression : A regular expression, regex or regexp[1] (sometimes called a rational expression)[2][3] is, in theoretical computer science and formal language theory, a sequence of characters that define a search pattern."
+preprocessed_text = re.sub('[^a-zA-Z]', ' ', text) #정규표현식 ^이용
+print(preprocessed_text)
+'''
+###텍스트 전처리 with re모듈 
+text = """100 John    PROF
+101 James   STUD
+102 Mac   STUD"""
+
+tokenized_text = re.split("\s+", text) #\s+ : 공백 1개 이상 찾기 
+print(tokenized_text)
+print(re.findall('\d+',text)) #syntax 공부 : findall(정규표현식, 문자열) -> 문자열 자리에는 str객체가 들어가야 함. 리스트 등 다른 자료형 x
+print(re.findall('[A-Z]',text)) 
+print(re.findall('[A-Z]{4}',text))
+print(re.findall('[A-Z][a-z]+',text))
+
+from nltk.tokenize import RegexpTokenizer
+#RegexpTokenizer : 정규표현식을 이용한 단어 토큰화
+
+text1 = "Don't be fooled by the dark sounding name, Mr. Jone's Orphanage is as cheery as cheery goes for a pastry shop"
+tokenizer1 = RegexpTokenizer("[\w]+") #[\w]+ : 문자 또는 숫자가 1개 이상인 경우
+#gaps = True : 정규 표현식을 토큰화의 기준으로 사용하겠다는 의미
+#\s+ : 공백
+tokenizer2 = RegexpTokenizer("\s+", gaps=True) 
+
+print('[\w]+ 토큰화 결과 : ',tokenizer1.tokenize(text1)) 
+print('공백 기준 토큰화 결과 : ',tokenizer2.tokenize(text1))
+#두 토큰화의 결과가 다르다. 
+
+###정수 인코딩
+#단어를 정수와 mapping
+raw_text = "A barber is a person. a barber is good person. a barber is huge person. he Knew A Secret! The Secret He Kept is huge secret. Huge secret. His barber kept his word. a barber kept his word. His barber kept his secret. But keeping and keeping such a huge secret to himself was driving the barber crazy. the barber went up a huge mountain."
+sentences = sent_tokenize(raw_text) #문장으로 토큰화
+#print(sentences)
+vocab = {} #단어 : 등장 빈도
+preprocessed_sentences = []
+
+#stop_words_list : 영어 불용어 리스트
+for sentence in sentences : 
+    TS = word_tokenize(sentence) 
+    result = [] #result list is reset when target sentence changes.  
+
+    for word in TS :
+        word = word.lower() #소문자화 
+        
+        if word not in stop_words_list and len(word) > 2 : #단어가 길이가 3 이상인 불용어가 아닌 경우
+            result.append(word)  #append to result list 
+            if word not in vocab :  #if the word doesn't exist in vocab dictionary 
+                vocab[word] = 0 #append the word to dict.  
+            vocab[word] += 1 #count frequency of word  
+    preprocessed_sentences.append(result) #append result to preprocessed sentences list 
+    #because this line is in first for loop, result list is a list whose elements are filtered words
+
+print('preprocessed text : ',preprocessed_sentences)
+print('frequency of the vocab : ',vocab)
+
+#빈도순으로 정렬하기 
+vocab_sorted = sorted(vocab.items(), key = lambda x:x[1],reverse = True) 
+print('sorted by frequency',vocab_sorted)
+
+#빈도순으로 정수 부여 
+#빈도가 클수록 작은 정수 부여 
+word_to_int = {} 
+i = 0 
+for (word,frequency) in vocab_sorted : 
+    if frequency > 1 : #1번 나오는 단어는 제외 
+        i += 1 
+        word_to_int[word] = i 
+print(word_to_int)
